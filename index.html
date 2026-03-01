@@ -45,16 +45,29 @@
     #menuToggle {
       display: none;
       position: fixed;
-      top: 12px;
-      left: 12px;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 101;
-      background: #1e1b38;
-      color: #a78bfa;
+      width: 54px;
+      height: 54px;
       border: none;
-      border-radius: 6px;
-      padding: 10px;
-      font-size: 1.2rem;
+      border-radius: 50%;
+      background: rgba(30, 27, 56, 0.92);
+      color: #a78bfa;
+      font-size: 1.5rem;
+      font-weight: bold;
       cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      transition: all 0.25s ease;
+    }
+
+    #menuToggle:hover,
+    #menuToggle:active {
+      background: rgba(42, 37, 80, 0.95);
+      transform: translateX(-50%) scale(1.08);
+      box-shadow: 0 6px 20px rgba(167, 139, 250, 0.3);
     }
 
     #toggle {
@@ -226,6 +239,7 @@
       #sidebar { width: 85%; }
       #toggle button { font-size: 0.9rem; padding: 8px; }
       #search { font-size: 0.9rem; padding-left: 40px; }
+      #menuToggle { width: 48px; height: 48px; font-size: 1.3rem; }
     }
   </style>
 </head>
@@ -265,7 +279,7 @@
 </div>
 
 <script>
-const BASE_EMBED = "https://vidsrc.cc/v2/embed";  // Reverted to original vidsrc.cc (may have ads/redirects)
+const BASE_EMBED = "https://vidsrc.cc/v2/embed";
 const BATCH_SIZE = 20;
 const SCROLL_THRESHOLD = 400;
 
@@ -288,7 +302,7 @@ menuToggle.onclick = () => {
   sidebar.classList.toggle("hidden");
 };
 
-// Close sidebar on outside click (mobile)
+// Close sidebar when clicking outside (mobile)
 document.addEventListener("click", e => {
   if (window.innerWidth > 900) return;
   if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
@@ -453,8 +467,7 @@ document.getElementById("tvBtn").onclick = () => {
 searchEl.addEventListener("input", debounce(e => {
   const q = e.target.value.toLowerCase().trim();
   if (!q) {
-    // Optional: reload full list if you cache it earlier
-    loadData();  // simplest way to reset
+    loadData();  // reset to full list
     return;
   }
   const filtered = allItems.filter(i => (i.title || i.name || "").toLowerCase().includes(q));
