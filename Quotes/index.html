@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Quotes</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      height: 100vh;
+      background: #000;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .quote-container {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      text-align: center;
+      padding: 40px;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+    }
+
+    .quote {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      line-height: 1.3;
+      margin-bottom: 30px;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .author {
+      font-size: 1.3rem;
+      opacity: 0.85;
+      font-style: italic;
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.95rem;
+      opacity: 0.6;
+      z-index: 3;
+    }
+
+    .fade-in {
+      opacity: 1 !important;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="space"></canvas>
+
+  <div class="quote-container" id="quoteContainer">
+    <div class="quote" id="quote">"The only way to do great work is to love what you do."</div>
+    <div class="author" id="author">— Steve Jobs</div>
+  </div>
+
+  <div class="hint">Move your mouse • Click anywhere for new quote</div>
+
+  <script>
+    // 100 Inspirational Quotes (carefully selected & formatted)
+    const quotes = [
+      { text: "Life is about making an impact, not making an income.", author: "Kevin Kruse" },
+      { text: "Whatever the mind of man can conceive and believe, it can achieve.", author: "Napoleon Hill" },
+      { text: "Strive not to be a success, but rather to be of value.", author: "Albert Einstein" },
+      { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+      { text: "I have not failed. I've just found 10,000 ways that won't work.", author: "Thomas Edison" },
+      { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+      { text: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle Onassis" },
+      { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+      { text: "Everything you’ve ever wanted is sitting on the other side of fear.", author: "George Addair" },
+      { text: "The only limit to our realization of tomorrow will be our doubts of today.", author: "Franklin D. Roosevelt" },
+      { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" },
+      { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+      { text: "The best way to predict the future is to create it.", author: "Abraham Lincoln" },
+      { text: "Act as if what you do makes a difference. It does.", author: "William James" },
+      { text: "You miss 100% of the shots you don’t take.", author: "Wayne Gretzky" },
+      { text: "The only person you are destined to become is the person you decide to be.", author: "Ralph Waldo Emerson" },
+      { text: "Everything comes to us that feeds us.", author: "Rumi" },
+      { text: "Be yourself; everyone else is already taken.", author: "Oscar Wilde" },
+      { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
+      { text: "What you get by achieving your goals is not as important as what you become by achieving your goals.", author: "Zig Ziglar" },
+      { text: "The harder you work for something, the greater you’ll feel when you achieve it.", author: "Anonymous" },
+      { text: "Dream big and dare to fail.", author: "Norman Vaughan" },
+      { text: "It always seems impossible until it’s done.", author: "Nelson Mandela" },
+      { text: "If opportunity doesn’t knock, build a door.", author: "Milton Berle" },
+      { text: "The best revenge is massive success.", author: "Frank Sinatra" },
+      { text: "Don’t watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+      { text: "You are never too old to set another goal or to dream a new dream.", author: "C.S. Lewis" },
+      { text: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
+      { text: "Success usually comes to those who are too busy to be looking for it.", author: "Henry David Thoreau" },
+      { text: "Don’t be pushed around by the fears in your mind. Be led by the dreams in your heart.", author: "Roy T. Bennett" },
+      { text: "The biggest risk is not taking any risk.", author: "Mark Zuckerberg" },
+      { text: "Stay hungry, stay foolish.", author: "Steve Jobs" },
+      { text: "Everything you want is on the other side of fear.", author: "Jack Canfield" },
+      { text: "The way to get started is to quit talking and begin doing.", author: "Walt Disney" },
+      { text: "When you cease to dream you cease to live.", author: "Malcolm Forbes" },
+      { text: "I alone cannot change the world, but I can cast a stone across the water to create many ripples.", author: "Mother Teresa" },
+      { text: "The pessimist sees difficulty in every opportunity. The optimist sees opportunity in every difficulty.", author: "Winston Churchill" },
+      { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+      { text: "If you want to achieve greatness stop asking for permission.", author: "Anonymous" },
+      { text: "Things work out best for those who make the best of how things work out.", author: "John Wooden" },
+      { text: "To live a creative life, we must lose our fear of being wrong.", author: "Joseph Chilton Pearce" },
+      { text: "If you are not willing to risk the usual, you will have to settle for the ordinary.", author: "Jim Rohn" },
+      { text: "Trust because you are willing to accept the risk, not because it’s safe or certain.", author: "Anonymous" },
+      { text: "All our dreams can come true if we have the courage to pursue them.", author: "Walt Disney" },
+      { text: "Good things come to people who wait, but better things come to those who go out and get them.", author: "Anonymous" },
+      { text: "Success is walking from failure to failure with no loss of enthusiasm.", author: "Winston Churchill" },
+      { text: "Just when the caterpillar thought the world was ending, it became a butterfly.", author: "Anonymous" },
+      { text: "The only way of finding the limits of the possible is by going beyond them into the impossible.", author: "Arthur C. Clarke" },
+      { text: "Do one thing every day that scares you.", author: "Eleanor Roosevelt" },
+      { text: "The biggest adventure you can take is to live the life of your dreams.", author: "Oprah Winfrey" },
+      { text: "If you can dream it, you can do it.", author: "Walt Disney" },
+      { text: "The difference between ordinary and extraordinary is that little extra.", author: "Jimmy Johnson" },
+      { text: "There is only one way to avoid criticism: do nothing, say nothing, and be nothing.", author: "Aristotle" },
+      { text: "The man who has confidence in himself gains the confidence of others.", author: "Hasidic Proverb" },
+      { text: "We may encounter many defeats but we must not be defeated.", author: "Maya Angelou" },
+      { text: "Knowing is not enough; we must apply. Willing is not enough; we must do.", author: "Johann Wolfgang von Goethe" },
+      { text: "The only person who is educated is the one who has learned how to learn and change.", author: "Carl Rogers" },
+      { text: "Your time is limited, so don’t waste it living someone else’s life.", author: "Steve Jobs" },
+      { text: "The greatest glory in living lies not in never falling, but in rising every time we fall.", author: "Nelson Mandela" },
+      { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+      { text: "I find that the harder I work, the more luck I seem to have.", author: "Thomas Jefferson" },
+      { text: "Opportunities don’t happen. You create them.", author: "Chris Grosser" },
+      { text: "Try not to become a man of success. Rather become a man of value.", author: "Albert Einstein" },
+      { text: "There is no substitute for hard work.", author: "Thomas Edison" },
+      { text: "The only thing standing between you and your goal is the story you keep telling yourself.", author: "Jordan Belfort" },
+      { text: "What seems to us as bitter trials are often blessings in disguise.", author: "Oscar Wilde" },
+      { text: "The distance between your dreams and reality is called action.", author: "Anonymous" },
+      { text: "Don’t let yesterday take up too much of today.", author: "Will Rogers" },
+      { text: "You get what you give.", author: "Anonymous" },
+      { text: "The harder the battle, the sweeter the victory.", author: "Les Brown" },
+      { text: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" },
+      { text: "Fall seven times and stand up eight.", author: "Japanese Proverb" },
+      { text: "When everything seems to be going against you, remember that the airplane takes off against the wind, not with it.", author: "Henry Ford" },
+      { text: "It’s not whether you get knocked down, it’s whether you get up.", author: "Vince Lombardi" },
+      { text: "If you want something you’ve never had, you must be willing to do something you’ve never done.", author: "Thomas Jefferson" },
+      { text: "The only limits in life are the ones you make.", author: "Anonymous" },
+      { text: "Happiness is not something ready made. It comes from your own actions.", author: "Dalai Lama" },
+      { text: "The mind is everything. What you think you become.", author: "Buddha" },
+      { text: "Twenty years from now you will be more disappointed by the things that you didn’t do than by the ones you did do.", author: "Mark Twain" },
+      { text: "Every strike brings me closer to the next home run.", author: "Babe Ruth" },
+      { text: "Life is 10% what happens to me and 90% of how I react to it.", author: "Charles R. Swindoll" },
+      { text: "The most difficult thing is the decision to act, the rest is merely tenacity.", author: "Amelia Earhart" },
+      { text: "Defeat is not the worst of failures. Not to have tried is the true failure.", author: "George Edward Woodberry" },
+      { text: "I didn’t get there by wishing for it or hoping for it, but by working for it.", author: "Estée Lauder" },
+      { text: "Build your own dreams, or someone else will hire you to build theirs.", author: "Farrah Gray" },
+      { text: "The question isn’t who is going to let me; it’s who is going to stop me.", author: "Ayn Rand" },
+      { text: "When I let go of what I am, I become what I might be.", author: "Lao Tzu" },
+      { text: "The most common way people give up their power is by thinking they don’t have any.", author: "Alice Walker" },
+      { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+      { text: "An unexamined life is not worth living.", author: "Socrates" },
+      { text: "Eighty percent of success is showing up.", author: "Woody Allen" },
+      { text: "Your life does not get better by chance, it gets better by change.", author: "Jim Rohn" },
+      { text: "The only thing worse than being blind is having sight but no vision.", author: "Helen Keller" },
+      { text: "I am not a product of my circumstances. I am a product of my decisions.", author: "Stephen Covey" },
+      { text: "The two most important days in your life are the day you are born and the day you find out why.", author: "Mark Twain" },
+      { text: "Whatever you are, be a good one.", author: "Abraham Lincoln" },
+      { text: "If you cannot do great things, do small things in a great way.", author: "Napoleon Hill" },
+      { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" }
+    ];
+
+    // Canvas setup for interactive space background
+    const canvas = document.getElementById('space');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let stars = [];
+    let mouseX = 0;
+    let mouseY = 0;
+
+    class Star {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.size = Math.random() * 2.5 + 0.5;
+        this.speed = Math.random() * 0.8 + 0.2;
+        this.opacity = Math.random() * 0.8 + 0.2;
+      }
+      update() {
+        // Gentle movement influenced by mouse
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+        this.x += (dx / dist) * this.speed * 0.15;
+        this.y += (dy / dist) * this.speed * 0.15;
+
+        // Wrap around edges
+        if (this.x < 0) this.x = width;
+        if (this.x > width) this.x = 0;
+        if (this.y < 0) this.y = height;
+        if (this.y > height) this.y = 0;
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#a0d8ff';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    function initStars() {
+      stars = [];
+      const count = Math.floor(Math.max(width, height) / 3); // ~400-800 stars
+      for (let i = 0; i < count; i++) {
+        stars.push(new Star());
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.12)'; // trail effect
+      ctx.fillRect(0, 0, width, height);
+
+      for (let star of stars) {
+        star.update();
+        star.draw();
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // Mouse interaction
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    // Click anywhere → new quote with fade
+    document.addEventListener('click', showNewQuote);
+
+    function showNewQuote() {
+      const container = document.getElementById('quoteContainer');
+      container.classList.remove('fade-in');
+
+      // Slight delay for smooth fade out
+      setTimeout(() => {
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        const q = quotes[randomIndex];
+
+        document.getElementById('quote').textContent = `"${q.text}"`;
+        document.getElementById('author').textContent = `— ${q.author}`;
+
+        container.classList.add('fade-in');
+      }, 400);
+    }
+
+    // Keyboard support: press any key (except modifiers) for new quote
+    document.addEventListener('keydown', (e) => {
+      if (!['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) {
+        showNewQuote();
+      }
+    });
+
+    // Initialize everything
+    window.addEventListener('resize', () => {
+      resize();
+      initStars();
+    });
+
+    // Start the experience
+    resize();
+    initStars();
+    animate();
+
+    // Show first quote with fade-in after load
+    setTimeout(() => {
+      document.getElementById('quoteContainer').classList.add('fade-in');
+    }, 300);
+
+    // Optional: auto-change quote every 25 seconds for passive beauty
+    setInterval(() => {
+      showNewQuote();
+    }, 25000);
+  </script>
+</body>
+</html>
