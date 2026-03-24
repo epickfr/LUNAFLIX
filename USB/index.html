@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><style>body{margin:0;height:100vh;background:#111;display:flex;align-items:center;justify-content:center;}canvas{width:800px;height:800px;}</style></head>
+<body><canvas id=c></canvas><script>
+const m = {"vertices":[{"x":-50,"y":-30,"z":-15},{"x":50,"y":-30,"z":-15},{"x":50,"y":120,"z":-15},{"x":-50,"y":120,"z":-15},{"x":-50,"y":-30,"z":15},{"x":50,"y":-30,"z":15},{"x":50,"y":120,"z":15},{"x":-50,"y":120,"z":15},{"x":-30,"y":-30,"z":-10},{"x":30,"y":-30,"z":-10},{"x":30,"y":-30,"z":10},{"x":-30,"y":-30,"z":10},{"x":-30,"y":-80,"z":-10},{"x":30,"y":-80,"z":-10},{"x":30,"y":-80,"z":10},{"x":-30,"y":-80,"z":10}],"faces":[{"a":0,"b":1,"c":2,"color":"#3b82f6"},{"a":0,"b":2,"c":3,"color":"#3b82f6"},{"a":4,"b":6,"c":5,"color":"#3b82f6"},{"a":4,"b":7,"c":6,"color":"#3b82f6"},{"a":3,"b":2,"c":6,"color":"#1d4ed8"},{"a":3,"b":6,"c":7,"color":"#1d4ed8"},{"a":0,"b":3,"c":7,"color":"#1e40af"},{"a":0,"b":7,"c":4,"color":"#1e40af"},{"a":1,"b":5,"c":6,"color":"#1e40af"},{"a":1,"b":6,"c":2,"color":"#1e40af"},{"a":0,"b":8,"c":9,"color":"#1d4ed8"},{"a":0,"b":9,"c":1,"color":"#1d4ed8"},{"a":4,"b":5,"c":10,"color":"#1d4ed8"},{"a":4,"b":10,"c":11,"color":"#1d4ed8"},{"a":1,"b":9,"c":10,"color":"#1d4ed8"},{"a":1,"b":10,"c":5,"color":"#1d4ed8"},{"a":0,"b":4,"c":11,"color":"#1d4ed8"},{"a":0,"b":11,"c":8,"color":"#1d4ed8"},{"a":12,"b":13,"c":14,"color":"#9ca3af"},{"a":12,"b":14,"c":15,"color":"#9ca3af"},{"a":8,"b":12,"c":13,"color":"#d1d5db"},{"a":8,"b":13,"c":9,"color":"#d1d5db"},{"a":11,"b":10,"c":14,"color":"#d1d5db"},{"a":11,"b":14,"c":15,"color":"#d1d5db"},{"a":9,"b":13,"c":14,"color":"#6b7280"},{"a":9,"b":14,"c":10,"color":"#6b7280"},{"a":8,"b":11,"c":15,"color":"#6b7280"},{"a":8,"b":15,"c":12,"color":"#6b7280"}]};
+const canvas=document.getElementById('c');const ctx=canvas.getContext('2d');
+canvas.width=800;canvas.height=800;
+let r=0;
+function loop(){
+  r+=0.01;ctx.clearRect(0,0,800,800);
+  m.faces.map(f=>{
+    function p(v){
+      let x1=v.x*Math.cos(r)-v.z*Math.sin(r);let z1=v.z*Math.cos(r)+v.x*Math.sin(r);
+      let y1=v.y*Math.cos(0.2)-z1*Math.sin(0.2);let s=400/(400+z1);
+      return {x:x1*s+400,y:y1*s+400,z:z1}
+    }
+    let a=p(m.vertices[f.a]),b=p(m.vertices[f.b]),c=p(m.vertices[f.c]);
+    return {a,b,c,d:(a.z+b.z+c.z)/3,color:f.color}
+  }).sort((a,b)=>b.d-a.d).forEach(f=>{
+    ctx.beginPath();ctx.moveTo(f.a.x,f.a.y);ctx.lineTo(f.b.x,f.b.y);ctx.lineTo(f.c.x,f.c.y);ctx.closePath();
+    ctx.fillStyle=f.color;ctx.fill();ctx.strokeStyle='#fff1';ctx.stroke();
+  });requestAnimationFrame(loop);
+}loop();
+</script></body></html>
