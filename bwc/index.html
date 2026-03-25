@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blocked Words Checker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 650px;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1em;
+        }
+        
+        .input-section {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #34495e;
+            font-weight: 600;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 130px;
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 16px;
+            resize: vertical;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.2);
+        }
+        
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        #checkBtn {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
+        }
+        
+        #checkBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(79, 172, 254, 0.3);
+        }
+        
+        #clearBtn {
+            background: #f1f2f6;
+            color: #576574;
+        }
+        
+        #clearBtn:hover {
+            background: #e4e6eb;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #f39c12;
+            padding: 15px;
+            font-weight: 600;
+            background: #fff8e1;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .result-section {
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 15px;
+            background: #f8f9fa;
+            display: none;
+            border: 1px solid #e9ecef;
+            animation: fadeIn 0.4s;
+        }
+        
+        .result-title {
+            font-size: 1.2em;
+            text-align: center;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        #resultCount {
+            font-size: 4em;
+            font-weight: 800;
+            text-align: center;
+            color: #e74c3c;
+            line-height: 1;
+            margin: 10px 0;
+        }
+        
+        .result-message {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .found-words {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+        }
+        
+        .found-words h4 {
+            color: #34495e;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        
+        .word-tag {
+            display: inline-flex;
+            align-items: center;
+            background: #ffeded;
+            color: #e74c3c;
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+            border: 1px solid #ffd0d0;
+        }
+        
+        .word-tag .count {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            font-size: 0.8em;
+        }
+        
+        .severity {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .severity-level {
+            padding: 8px 25px;
+            border-radius: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+        
+        .low { background: #e8f8f5; color: #27ae60; }
+        .medium { background: #fef5e7; color: #f39c12; }
+        .high { background: #fdedec; color: #e74c3c; }
+        
+        @media (max-width: 600px) {
+            .container { padding: 25px 20px; }
+            h1 { font-size: 1.8em; }
+            .button-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SafeText Checker</h1>
+        <p class="subtitle">Enter text below to see if it triggers the blocked words filter</p>
+        
+        <div id="loading" class="loading">
+            ⏳ Connecting and extracting blocked words from JSON editor...
+        </div>
+        
+        <div class="input-section">
+            <label for="userInput">Text to analyze:</label>
+            <textarea id="userInput" placeholder="Type or paste your text here to check against the student filter..."></textarea>
+            
+            <div class="button-container">
+                <button id="checkBtn">Scan Text</button>
+                <button id="clearBtn">Clear</button>
+            </div>
+        </div>
+        
+        <div class="result-section" id="resultSection">
+            <div class="result-title">Total Flags</div>
+            <div id="resultCount">0</div>
+            
+            <div class="result-message" id="resultMessage">
+                No blocked words found
+            </div>
+            
+            <div class="severity" id="severityIndicator"></div>
+            
+            <div class="found-words" id="foundWordsContainer">
+                <h4>Specific words detected:</h4>
+                <div id="foundWords"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let blockedWords = [];
+        
+        async function fetchBlockedWords() {
+            const url = 'https://raw.githubusercontent.com/epickfr/LUNAFLIX/refs/heads/main/blockedwordsonstudenkeeper/index.html';
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Failed to fetch. Status: ${response.status}`);
+                
+                const htmlContent = await response.text();
+                let extractedWords = [];
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                
+                const aceStrings = doc.querySelectorAll('.ace_string');
+                
+                if (aceStrings.length > 0) {
+                    Array.from(aceStrings).forEach(el => {
+                        let word = el.textContent.replace(/^["']|["']$/g, '').trim();
+                        if (word) extractedWords.push(word);
+                    });
+                } else {
+                    const stringMatches = htmlContent.match(/"([^"\\]+)"/g);
+                    if (stringMatches) {
+                        extractedWords = stringMatches.map(s => s.replace(/"/g, '').trim());
+                    }
+                }
+                
+                blockedWords = extractedWords
+                    .map(word => word.toLowerCase())
+                    .filter(word => {
+                        return word.length > 2 && // Ignore 1-2 letter code artifacts
+                               !word.includes('ace_') && // Ignore Ace Editor CSS classes
+                               !word.match(/^[0-9]+px$/) &&
+                               !['true', 'false', 'null', 'html', 'head', 'body', 'script', 'style'].includes(word);
+                    });
+                
+                blockedWords = [...new Set(blockedWords)];
+                
+                console.log(`Successfully extracted ${blockedWords.length} actual words from the Editor HTML!`);
+                
+                const loadingEl = document.getElementById('loading');
+                loadingEl.style.backgroundColor = '#e8f8f5';
+                loadingEl.style.color = '#27ae60';
+                loadingEl.innerHTML = `✅ Ready! Successfully extracted <strong>${blockedWords.length}</strong> words from the database.`;
+                
+                setTimeout(() => { loadingEl.style.display = 'none'; }, 3500);
+                
+            } catch (error) {
+                console.error('Extraction Error:', error);
+                const loadingEl = document.getElementById('loading');
+                loadingEl.style.backgroundColor = '#fdedec';
+                loadingEl.style.color = '#e74c3c';
+                loadingEl.innerHTML = `❌ Error connecting to database: ${error.message}`;
+            }
+        }
+        
+        function checkText() {
+            const input = document.getElementById('userInput').value.toLowerCase();
+            const resultSection = document.getElementById('resultSection');
+            const resultCount = document.getElementById('resultCount');
+            const resultMessage = document.getElementById('resultMessage');
+            const foundWords = document.getElementById('foundWords');
+            const severityIndicator = document.getElementById('severityIndicator');
+            const foundWordsContainer = document.getElementById('foundWordsContainer');
+            
+            if (!input.trim()) {
+                alert('Please enter some text to check first.');
+                return;
+            }
+            if (blockedWords.length === 0) {
+                alert('Please wait a second, the word list is still downloading/extracting!');
+                return;
+            }
+            
+            let totalFlags = 0;
+            const foundWordsMap = {};
+            
+            blockedWords.forEach(word => {
+                if (!word.trim()) return;
+                
+                const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+                const matches = input.match(regex);
+                
+                if (matches) {
+                    foundWordsMap[word] = matches.length;
+                    totalFlags += matches.length;
+                }
+            });
+            
+            resultCount.textContent = totalFlags;
+            resultSection.style.display = 'block';
+            
+            // Generate tags for found words
+            foundWords.innerHTML = '';
+            if (Object.keys(foundWordsMap).length > 0) {
+                Object.entries(foundWordsMap).forEach(([word, count]) => {
+                    const wordTag = document.createElement('span');
+                    wordTag.className = 'word-tag';
+                    wordTag.innerHTML = `${word} <span class="count">${count}</span>`;
+                    foundWords.appendChild(wordTag);
+                });
+                foundWordsContainer.style.display = 'block';
+            } else {
+                foundWordsContainer.style.display = 'none';
+            }
+            
+            // Risk logic
+            if (totalFlags === 0) {
+                resultCount.style.color = '#27ae60';
+                resultMessage.textContent = 'Awesome! Your text appears to be clean.';
+                severityIndicator.innerHTML = '<div class="severity-level low">Zero Flags</div>';
+            } else if (totalFlags <= 2) {
+                resultCount.style.color = '#f39c12';
+                resultMessage.textContent = `Careful! Your text will be flagged ${totalFlags} time(s).`;
+                severityIndicator.innerHTML = '<div class="severity-level medium">Moderate Risk</div>';
+            } else {
+                resultCount.style.color = '#e74c3c';
+                resultMessage.textContent = `Warning: Your text will be heavily flagged (${totalFlags} times).`;
+                severityIndicator.innerHTML = '<div class="severity-level high">High Risk</div>';
+            }
+            
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function clearInput() {
+            document.getElementById('userInput').value = '';
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('userInput').focus();
+        }
+        
+        // Boot up
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchBlockedWords(); // Start the extraction process immediately
+            
+            document.getElementById('checkBtn').addEventListener('click', checkText);
+            document.getElementById('clearBtn').addEventListener('click', clearInput);
+        });
+    </script>
+</body>
+</html>
