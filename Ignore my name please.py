@@ -75,7 +75,7 @@ if __name__ == '__main__':
     try:
         import ctypes
         hwnd = ctypes.windll.kernel32.GetConsoleWindow()
-        if hwnd != 0:
+        if hwnd != 0 and False:
             ctypes.windll.user32.ShowWindow(hwnd, 0)
     except:
         pass
