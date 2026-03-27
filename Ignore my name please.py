@@ -142,17 +142,17 @@ def show_menu():
             break
         elif choice == "2":
             print(
-                Fore.RED + "\nWARNING: automatic termination can impact the system/your sessions."
+                Fore.RED + "\nWARNING: automatic termination can impact the system (but probibally wont)."
                 + Style.RESET_ALL
             )
-            confirm_arg = input("Type '--confirm' if you really intend to allow killing: ").strip()
-            if confirm_arg == "--confirm":
+            confirm_arg = input("Type 'Epick' if you really intend to allow killing: ").strip()
+            if confirm_arg == "Epick":
                 run_kill_loop(dry_run=False, confirm_flag=True)
                 break
             else:
                 print("Canceled. Staying safe; no processes killed.")
         elif choice == "3":
-            print("Target processes:", ", ".join(TARGET_PROCESSES))
+            print("WOW its really working!!1")
         elif choice == "4":
             sys.exit(0)
         else:
