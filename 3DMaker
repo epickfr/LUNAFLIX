@@ -1,0 +1,1143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>3d model editor fr LOL</title>
+<style>
+body{background:#2d2d2d;font-family:Tahoma,Arial,sans-serif;font-size:11px;margin:0;color:#ccc;overflow:hidden;user-select:none}
+.menubar{background:linear-gradient(#484848,#383838);border-bottom:1px solid #1a1a1a;height:26px;display:flex;align-items:center}
+.mi{padding:4px 14px;cursor:pointer;color:#ddd;position:relative;font-size:12px}
+.mi:hover{background:#4a90e2}
+.dd{display:none;position:absolute;top:100%;left:0;background:#383838;border:1px solid #222;min-width:200px;z-index:1000;box-shadow:3px 3px 12px rgba(0,0,0,.6)}
+.mi:hover .dd{display:block}
+.di{padding:7px 16px;cursor:pointer;color:#ddd;border-bottom:1px solid #2a2a2a}
+.di:hover{background:#4a90e2}
+.di small{float:right;color:#888}
+.dsep{border-top:1px solid #555;margin:2px 0}
+.toolbar{background:linear-gradient(#3c3c3c,#2d2d2d);border-bottom:1px solid #1a1a1a;padding:4px 8px;display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.tb{background:#484848;border:1px solid #555;padding:5px 10px;cursor:pointer;color:#ddd;border-radius:3px;font-size:11px;white-space:nowrap}
+.tb:hover{background:#555}
+.tb.on{background:#4a90e2;border-color:#69b0ff;color:#fff}
+.sep{width:1px;height:22px;background:#222;margin:0 6px}
+.workspace{display:flex;height:calc(100vh - 60px)}
+.pnl{background:#2d2d2d;overflow-y:auto;flex-shrink:0}
+.pnl-l{width:250px;border-right:1px solid #1a1a1a}
+.pnl-r{width:250px;border-left:1px solid #1a1a1a}
+.pt{background:linear-gradient(#3c3c3c,#2d2d2d);padding:5px 10px;font-weight:bold;border-bottom:1px solid #1a1a1a;color:#adf}
+.pb{padding:8px}
+.pg{background:#363636;border:1px solid #444;border-radius:3px;margin-bottom:6px;overflow:hidden}
+.ph{background:linear-gradient(#444,#3a3a3a);padding:4px 8px;font-weight:bold;font-size:11px}
+.pc{padding:6px 8px}
+input[type=number],input[type=text],select{background:#1a1a1a;border:1px solid #444;color:#ddd;padding:3px 5px;border-radius:2px;font-size:11px;width:100%;box-sizing:border-box}
+input[type=color]{width:100%;height:28px;border:1px solid #444;cursor:pointer;padding:0}
+button{background:linear-gradient(#484848,#3a3a3a);border:1px solid #555;color:#ddd;padding:5px 10px;cursor:pointer;border-radius:3px;font-size:11px;width:100%;margin-top:4px}
+button:hover{background:linear-gradient(#555,#484848)}
+.btn-red{background:linear-gradient(#c44,#a33);border-color:#e55}
+.btn-blue{background:linear-gradient(#4a90e2,#3a80d2);border-color:#69b0ff}
+.lc{background:#1a1a1a;border:1px solid #444;max-height:130px;overflow-y:auto;border-radius:2px;margin-top:4px}
+.li{padding:3px 8px;cursor:pointer;border-bottom:1px solid #252525;font-family:Courier,monospace;font-size:10px;display:flex;align-items:center;gap:6px}
+.li:hover{background:#333}
+.li.sel{background:#4a90e2;color:#fff}
+.li .sw{width:10px;height:10px;border-radius:2px;border:1px solid #666;flex-shrink:0}
+.vp{flex:1;display:flex;flex-direction:column;background:#1a1a1a}
+canvas{flex:1;cursor:crosshair}
+.sbar{background:linear-gradient(#2d2d2d,#1a1a1a);border-top:1px solid #444;padding:3px 10px;font-size:11px;color:#888;display:flex;justify-content:space-between}
+textarea{width:100%;background:#1a1a1a;border:1px solid #444;color:#0f0;font-family:Courier,monospace;font-size:10px;padding:5px;border-radius:2px;box-sizing:border-box}
+#ctxMenu{display:none;position:fixed;z-index:9999;background:#383838;border:1px solid #555;min-width:180px;box-shadow:3px 3px 12px rgba(0,0,0,.6);border-radius:4px;overflow:hidden;padding:4px 0}
+.ci{padding:6px 16px;cursor:pointer;color:#ddd;font-size:12px}
+.ci:hover{background:#4a90e2}
+.csep{border-top:1px solid #555;margin:3px 0}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+#selectBox{position:fixed;border:1px solid #4a90e2;background:rgba(74,144,226,0.2);pointer-events:none;display:none;z-index:9998}
+</style>
+</head>
+<body>
+
+<div id="ctxMenu"></div>
+<div id="selectBox"></div>
+
+<div class="menubar">
+<div class="mi">File<div class="dd">
+<div class="di" onclick="newScene()">New Scene <small>Ctrl+N</small></div>
+<div class="di" onclick="exportHTML()">Export HTML <small>Ctrl+E</small></div>
+<div class="di" onclick="importJSON()">Import JSON</div>
+</div></div>
+<div class="mi">Edit<div class="dd">
+<div class="di" onclick="undo()">Undo <small>Ctrl+Z</small></div>
+<div class="dsep"></div>
+<div class="di" onclick="duplicateSel()">Duplicate <small>Shift+D</small></div>
+<div class="di" onclick="deleteSel()">Delete <small>Delete</small></div>
+</div></div>
+<div class="mi">Select<div class="dd">
+<div class="di" onclick="selectAll()">Select All <small>A</small></div>
+<div class="di" onclick="deselectAll()">Deselect All <small>Alt+A</small></div>
+<div class="di" onclick="invertSel()">Invert</div>
+</div></div>
+<div class="mi">Add<div class="dd">
+<div class="di" onclick="addPrim('cube')">Cube</div>
+<div class="di" onclick="addPrim('sphere')">UV Sphere</div>
+<div class="di" onclick="addPrim('cylinder')">Cylinder</div>
+<div class="di" onclick="addPrim('pyramid')">Pyramid</div>
+<div class="di" onclick="addPrim('usb')">USB Stick</div>
+<div class="di" onclick="addPrim('plane')">Plane</div>
+</div></div>
+<div class="mi">View<div class="dd">
+<div class="di" onclick="resetView()">Reset View</div>
+<div class="di" onclick="toggleWire()">Toggle Wireframe <small>Z</small></div>
+</div></div>
+</div>
+
+<div class="toolbar">
+<div class="tb on" id="tSel" onclick="setTool('select')">Select</div>
+<div class="tb" id="tBox" onclick="setTool('box')">Box Select</div>
+<div class="tb" id="tMov" onclick="setTool('move')">Move (G)</div>
+<div class="tb" id="tRot" onclick="setTool('rotate')">Rotate (R)</div>
+<div class="tb" id="tScl" onclick="setTool('scale')">Scale (S)</div>
+<div class="sep"></div>
+<div class="tb on" id="mVert" onclick="setMode('vertex')">Vertex</div>
+<div class="tb" id="mFace" onclick="setMode('face')">Face</div>
+<div class="tb" id="mObj" onclick="setMode('object')">Object</div>
+<div class="sep"></div>
+<div class="tb on" id="bSpin" onclick="toggleSpin()">Spin ON</div>
+<div class="tb" id="bWire" onclick="toggleWire()">Wire OFF</div>
+<div class="sep"></div>
+<span style="color:#888;margin-left:auto">Color:</span>
+<input type="color" id="primCol" value="#ff6600" style="width:40px;height:24px;padding:0;border:1px solid #555">
+<select id="primType" style="width:80px"><option>cube</option><option>sphere</option><option>cylinder</option><option>pyramid</option><option>usb</option><option>plane</option></select>
+<div class="tb" onclick="addPrimUI()">+ Add</div>
+</div>
+
+<div class="workspace">
+<div class="pnl pnl-l">
+<div class="pt">Outliner</div>
+<div class="pb">
+<div class="pg"><div class="ph">Objects</div><div class="pc"><div class="lc" id="objList"></div>
+<button onclick="deleteSel()" class="btn-red" style="margin-top:6px">Delete Selected</button>
+</div></div>
+
+<div class="pg"><div class="ph">Properties</div><div class="pc">
+<div id="vertProps">
+<b>Position</b>
+<div class="r3" style="margin-top:4px">
+<div>X<input type="number" id="posX"></div>
+<div>Y<input type="number" id="posY"></div>
+<div>Z<input type="number" id="posZ"></div>
+</div>
+<button onclick="applyPos()">Apply Position</button>
+</div>
+<div id="faceProps" style="display:none">
+<b>Face Color</b>
+<input type="color" id="faceCol" value="#ff0000" style="margin-top:4px">
+<button onclick="applyFaceCol()">Apply Color to Selected</button>
+</div>
+</div></div>
+
+<div class="pg"><div class="ph">Vertices</div><div class="pc"><div class="lc" id="vertList"></div></div></div>
+<div class="pg"><div class="ph">Faces</div><div class="pc"><div class="lc" id="faceList"></div></div></div>
+</div></div>
+
+<div class="vp">
+<canvas id="cv"></canvas>
+<div class="sbar"><div id="sL">Ready</div><div id="sR">Objects: 0</div></div>
+</div>
+
+<div class="pnl pnl-r">
+<div class="pt">Export</div>
+<div class="pb">
+<button onclick="exportHTML()" class="btn-blue">Export Standalone HTML</button>
+<p style="font-size:10px;color:#888;margin:6px 0">Creates a standalone spinning 3D webpage file.</p>
+<b>JSON Data:</b>
+<textarea id="jsonOut" rows="30" style="margin-top:4px" readonly></textarea>
+<button onclick="copyJSON()">Copy</button>
+</div></div>
+</div>
+
+<script>
+// ==================== STATE ====================
+var objects = [];
+var sel = { objs: [], verts: [], faces: [] };
+var cam = { rx: -0.4, ry: 0.6, zoom: 1.5, px: 0, py: 0 };
+var tool = 'select';
+var mode = 'vertex';
+var spin = true;
+var wire = false;
+var undoStack = [];
+var canvas = document.getElementById('cv');
+var ctx = canvas.getContext('2d');
+var selectBox = document.getElementById('selectBox');
+var boxStart = null;
+
+function resize() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+}
+window.onresize = resize;
+resize();
+
+// ==================== MATH ====================
+function project(v) {
+  var cy = Math.cos(cam.ry), sy = Math.sin(cam.ry);
+  var x1 = v.x * cy - v.z * sy, z1 = v.z * cy + v.x * sy;
+  var cx = Math.cos(cam.rx), sx = Math.sin(cam.rx);
+  var y1 = v.y * cx - z1 * sx, z2 = z1 * cx + v.y * sx;
+  var s = 800 / (800 + z2) * cam.zoom;
+  return { x: x1 * s + canvas.width / 2 + cam.px, y: y1 * s + canvas.height / 2 + cam.py, z: z2 };
+}
+
+function transform3D(v) {
+  var cy = Math.cos(cam.ry), sy = Math.sin(cam.ry);
+  var x1 = v.x * cy - v.z * sy, z1 = v.z * cy + v.x * sy;
+  var cx = Math.cos(cam.rx), sx = Math.sin(cam.rx);
+  return { x: x1, y: v.y * cx - z1 * sx, z: z1 * cx + v.y * sx };
+}
+
+function shade(hex, f) {
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.max(0, Math.min(255, ((n >> 16) & 255) * f | 0));
+  var g = Math.max(0, Math.min(255, ((n >> 8) & 255) * f | 0));
+  var b = Math.max(0, Math.min(255, (n & 255) * f | 0));
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+function triNormal(a, b, c) {
+  return {
+    x: (b.y - a.y) * (c.z - a.z) - (b.z - a.z) * (c.y - a.y),
+    y: (b.z - a.z) * (c.x - a.x) - (b.x - a.x) * (c.z - a.z),
+    z: (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+  };
+}
+
+function normalize(v) {
+  var l = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z) || 1;
+  return { x: v.x / l, y: v.y / l, z: v.z / l };
+}
+
+function ptInTri(px, py, a, b, c) {
+  var v0x = c.x - a.x, v0y = c.y - a.y, v1x = b.x - a.x, v1y = b.y - a.y;
+  var v2x = px - a.x, v2y = py - a.y;
+  var d00 = v0x * v0x + v0y * v0y, d01 = v0x * v1x + v0y * v1y;
+  var d02 = v0x * v2x + v0y * v2y, d11 = v1x * v1x + v1y * v1y;
+  var d12 = v1x * v2x + v1y * v2y, inv = 1 / (d00 * d11 - d01 * d01);
+  var u = (d11 * d02 - d01 * d12) * inv, v = (d00 * d12 - d01 * d02) * inv;
+  return u >= 0 && v >= 0 && u + v < 1;
+}
+
+function ptInRect(px, py, rx, ry, rw, rh) {
+  var minx = Math.min(rx, rx + rw), maxx = Math.max(rx, rx + rw);
+  var miny = Math.min(ry, ry + rh), maxy = Math.max(ry, ry + rh);
+  return px >= minx && px <= maxx && py >= miny && py <= maxy;
+}
+
+function saveUndo() {
+  undoStack.unshift(JSON.stringify(objects));
+  if (undoStack.length > 20) undoStack.pop();
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  objects = JSON.parse(undoStack.shift());
+  sel = { objs: [], verts: [], faces: [] };
+  refresh();
+  status('Undo');
+}
+
+function createObj(name, verts, faces) {
+  saveUndo();
+  objects.push({ name: name, verts: verts, faces: faces, visible: true });
+  sel = { objs: [objects.length - 1], verts: [], faces: [] };
+  var oi = objects.length - 1;
+  for (var i = 0; i < objects[oi].verts.length; i++) sel.verts.push({ oi: oi, vi: i });
+  refresh();
+  status('Added ' + name);
+}
+
+function deleteObj(oi) {
+  saveUndo();
+  objects.splice(oi, 1);
+  sel.objs = sel.objs.filter(function(i) { return i !== oi; }).map(function(i) { return i > oi ? i - 1 : i; });
+  sel.verts = sel.verts.filter(function(s) { return s.oi !== oi; }).map(function(s) { return { oi: s.oi > oi ? s.oi - 1 : s.oi, vi: s.vi }; });
+  sel.faces = sel.faces.filter(function(s) { return s.oi !== oi; }).map(function(s) { return { oi: s.oi > oi ? s.oi - 1 : s.oi, fi: s.fi }; });
+  refresh();
+  status('Deleted object');
+}
+
+function duplicateObj(oi) {
+  saveUndo();
+  var o = objects[oi];
+  var nv = o.verts.map(function(v) { return { x: v.x + 30, y: v.y, z: v.z + 30 }; });
+  var nf = o.faces.map(function(f) { return { a: f.a, b: f.b, c: f.c, color: f.color }; });
+  objects.push({ name: o.name + '.copy', verts: nv, faces: nf, visible: true });
+  refresh();
+  status('Duplicated ' + o.name);
+}
+
+function renameObj(oi) {
+  var name = prompt('Rename object:', objects[oi].name);
+  if (name) { objects[oi].name = name; refresh(); }
+}
+
+function getCol() { return document.getElementById('primCol').value; }
+function addPrimUI() { addPrim(document.getElementById('primType').value); }
+
+function addPrim(type) {
+  var c = getCol();
+  var v, f;
+  switch (type) {
+    case 'cube':
+      var s = 60;
+      v = [{ x: -s, y: -s, z: -s }, { x: s, y: -s, z: -s }, { x: s, y: s, z: -s }, { x: -s, y: s, z: -s },
+           { x: -s, y: -s, z: s }, { x: s, y: -s, z: s }, { x: s, y: s, z: s }, { x: -s, y: s, z: s }];
+      f = [{ a: 0, b: 2, c: 1, color: c }, { a: 0, b: 3, c: 2, color: c },
+           { a: 4, b: 5, c: 6, color: c }, { a: 4, b: 6, c: 7, color: c },
+           { a: 0, b: 1, c: 5, color: c }, { a: 0, b: 5, c: 4, color: c },
+           { a: 2, b: 3, c: 7, color: c }, { a: 2, b: 7, c: 6, color: c },
+           { a: 0, b: 4, c: 7, color: c }, { a: 0, b: 7, c: 3, color: c },
+           { a: 1, b: 2, c: 6, color: c }, { a: 1, b: 6, c: 5, color: c }];
+      createObj('Cube', v, f);
+      break;
+
+    case 'sphere':
+      var la = 10, lo = 14, r = 60;
+      v = []; f = [];
+      for (var i = 0; i <= la; i++) {
+        var th = i * Math.PI / la;
+        for (var j = 0; j <= lo; j++) {
+          var ph = j * 2 * Math.PI / lo;
+          v.push({ x: r * Math.sin(th) * Math.cos(ph), y: r * Math.cos(th), z: r * Math.sin(th) * Math.sin(ph) });
+        }
+      }
+      for (var i = 0; i < la; i++) for (var j = 0; j < lo; j++) {
+        var a = i * (lo + 1) + j, b = a + lo + 1;
+        f.push({ a: a, b: b, c: a + 1, color: c }, { a: b, b: b + 1, c: a + 1, color: c });
+      }
+      createObj('Sphere', v, f);
+      break;
+
+    case 'cylinder':
+      var sg = 16, r = 50, h = 80;
+      v = [{ x: 0, y: -h / 2, z: 0 }, { x: 0, y: h / 2, z: 0 }];
+      f = [];
+      for (var i = 0; i < sg; i++) {
+        var ang = (i / sg * Math.PI * 2);
+        v.push({ x: Math.cos(ang) * r, y: -h / 2, z: Math.sin(ang) * r });
+        v.push({ x: Math.cos(ang) * r, y: h / 2, z: Math.sin(ang) * r });
+      }
+      for (var i = 0; i < sg; i++) {
+        var t = 2 + i * 2, b = t + 1, nt = 2 + ((i + 1) % sg) * 2, nb = nt + 1;
+        f.push({ a: t, b: nt, c: b, color: c }, { a: nt, b: nb, c: b, color: c });
+        f.push({ a: 0, b: t, c: nt, color: c }, { a: 1, b: nb, c: b, color: c });
+      }
+      createObj('Cylinder', v, f);
+      break;
+
+    case 'pyramid':
+      v = [{ x: 0, y: -80, z: 0 }, { x: -70, y: 50, z: -70 }, { x: 70, y: 50, z: -70 }, { x: 70, y: 50, z: 70 }, { x: -70, y: 50, z: 70 }];
+      f = [{ a: 0, b: 1, c: 2, color: c }, { a: 0, b: 2, c: 3, color: c }, { a: 0, b: 3, c: 4, color: c }, { a: 0, b: 4, c: 1, color: c },
+           { a: 1, b: 3, c: 2, color: c }, { a: 1, b: 4, c: 3, color: c }];
+      createObj('Pyramid', v, f);
+      break;
+
+    case 'usb':
+      v = [{ x: -35, y: -15, z: -10 }, { x: 35, y: -15, z: -10 }, { x: 35, y: 80, z: -10 }, { x: -35, y: 80, z: -10 },
+           { x: -35, y: -15, z: 10 }, { x: 35, y: -15, z: 10 }, { x: 35, y: 80, z: 10 }, { x: -35, y: 80, z: 10 },
+           { x: -20, y: -15, z: -7 }, { x: 20, y: -15, z: -7 }, { x: 20, y: -15, z: 7 }, { x: -20, y: -15, z: 7 },
+           { x: -20, y: -55, z: -7 }, { x: 20, y: -55, z: -7 }, { x: 20, y: -55, z: 7 }, { x: -20, y: -55, z: 7 }];
+      f = [];
+      var bc = '#000080', mc = '#c0c0c0', md = '#808080';
+      [[0,2,1,bc],[0,3,2,bc],[4,5,6,bc],[4,6,7,bc],[3,6,2,bc],[3,7,6,bc],[0,4,7,bc],[0,7,3,bc],[1,2,6,bc],[1,6,5,bc],
+       [0,1,5,bc],[0,5,4,bc],[12,14,13,md],[12,15,14,md],[8,13,12,mc],[8,9,13,mc],[11,14,10,mc],[11,15,14,mc],
+       [9,14,13,md],[9,10,14,md],[8,12,15,md],[8,15,11,md],[8,11,10,mc],[8,10,9,mc]].forEach(function(d) {
+        f.push({ a: d[0], b: d[1], c: d[2], color: d[3] });
+      });
+      createObj('USB Stick', v, f);
+      break;
+
+    case 'plane':
+      var s = 80;
+      v = [{ x: -s, y: 0, z: -s }, { x: s, y: 0, z: -s }, { x: s, y: 0, z: s }, { x: -s, y: 0, z: s }];
+      f = [{ a: 0, b: 1, c: 2, color: c }, { a: 0, b: 2, c: 3, color: c }];
+      createObj('Plane', v, f);
+      break;
+  }
+}
+
+function isVertSel(oi, vi) { return sel.verts.some(function(s) { return s.oi === oi && s.vi === vi; }); }
+function isFaceSel(oi, fi) { return sel.faces.some(function(s) { return s.oi === oi && s.fi === fi; }); }
+function isObjSel(oi) { return sel.objs.indexOf(oi) !== -1; }
+
+function selectObj(oi, multi) {
+  if (multi) {
+    var idx = sel.objs.indexOf(oi);
+    if (idx !== -1) sel.objs.splice(idx, 1);
+    else sel.objs.push(oi);
+  } else {
+    sel.objs = [oi];
+    sel.faces = [];
+  }
+  sel.verts = [];
+  sel.objs.forEach(function(o) {
+    for (var i = 0; i < objects[o].verts.length; i++) sel.verts.push({ oi: o, vi: i });
+  });
+  if (mode === 'face') {
+    sel.faces = [];
+    sel.objs.forEach(function(o) {
+      for (var i = 0; i < objects[o].faces.length; i++) sel.faces.push({ oi: o, fi: i });
+    });
+  }
+  refresh();
+}
+
+function selectVert(oi, vi, multi) {
+  sel.faces = [];
+  if (multi) {
+    var idx = -1;
+    sel.verts.forEach(function(s, i) { if (s.oi === oi && s.vi === vi) idx = i; });
+    if (idx !== -1) sel.verts.splice(idx, 1);
+    else sel.verts.push({ oi: oi, vi: vi });
+  } else {
+    sel.verts = [{ oi: oi, vi: vi }];
+  }
+  if (sel.verts.length === 1) {
+    var v = objects[sel.verts[0].oi].verts[sel.verts[0].vi];
+    document.getElementById('posX').value = Math.round(v.x);
+    document.getElementById('posY').value = Math.round(v.y);
+    document.getElementById('posZ').value = Math.round(v.z);
+  }
+  refresh();
+}
+
+function selectFace(oi, fi, multi) {
+  sel.verts = [];
+  if (multi) {
+    var idx = -1;
+    sel.faces.forEach(function(s, i) { if (s.oi === oi && s.fi === fi) idx = i; });
+    if (idx !== -1) sel.faces.splice(idx, 1);
+    else sel.faces.push({ oi: oi, fi: fi });
+  } else {
+    sel.faces = [{ oi: oi, fi: fi }];
+  }
+  if (sel.faces.length === 1) {
+    document.getElementById('faceCol').value = objects[sel.faces[0].oi].faces[sel.faces[0].fi].color;
+  }
+  refresh();
+}
+
+function selectAll() {
+  if (mode === 'object') { sel.objs = objects.map(function(o, i) { return i; }); sel.verts = []; objects.forEach(function(o, oi) { for (var i = 0; i < o.verts.length; i++) sel.verts.push({ oi: oi, vi: i }); }); }
+  else if (mode === 'vertex') { sel.verts = []; objects.forEach(function(o, oi) { for (var i = 0; i < o.verts.length; i++) sel.verts.push({ oi: oi, vi: i }); }); }
+  else { sel.faces = []; objects.forEach(function(o, oi) { for (var i = 0; i < o.faces.length; i++) sel.faces.push({ oi: oi, fi: i }); }); }
+  refresh();
+}
+
+function deselectAll() { sel = { objs: [], verts: [], faces: [] }; refresh(); }
+
+function invertSel() {
+  if (mode === 'vertex') {
+    var nv = [];
+    objects.forEach(function(o, oi) { for (var i = 0; i < o.verts.length; i++) { if (!isVertSel(oi, i)) nv.push({ oi: oi, vi: i }); } });
+    sel.verts = nv;
+  } else if (mode === 'face') {
+    var nf = [];
+    objects.forEach(function(o, oi) { for (var i = 0; i < o.faces.length; i++) { if (!isFaceSel(oi, i)) nf.push({ oi: oi, fi: i }); } });
+    sel.faces = nf;
+  }
+  refresh();
+}
+
+function getSelCenter() {
+  var pts = [];
+  sel.verts.forEach(function(s) { if (objects[s.oi]) pts.push(objects[s.oi].verts[s.vi]); });
+  if (!pts.length) return null;
+  var cx = 0, cy = 0, cz = 0;
+  pts.forEach(function(p) { cx += p.x; cy += p.y; cz += p.z; });
+  return { x: cx / pts.length, y: cy / pts.length, z: cz / pts.length };
+}
+
+function getSelVerts() {
+  return sel.verts.map(function(s) { return objects[s.oi].verts[s.vi]; }).filter(Boolean);
+}
+
+function boxSelect(x1, y1, x2, y2) {
+  var minx = Math.min(x1, x2), maxx = Math.max(x1, x2);
+  var miny = Math.min(y1, y2), maxy = Math.max(y1, y2);
+  
+  if (mode === 'vertex') {
+    objects.forEach(function(obj, oi) {
+      if (!obj.visible) return;
+      obj.verts.forEach(function(v, vi) {
+        var p = project(v);
+        if (ptInRect(p.x, p.y, minx, miny, maxx - minx, maxy - miny)) {
+          if (!isVertSel(oi, vi)) sel.verts.push({ oi: oi, vi: vi });
+        }
+      });
+    });
+  } else if (mode === 'face') {
+    objects.forEach(function(obj, oi) {
+      if (!obj.visible) return;
+      obj.faces.forEach(function(face, fi) {
+        var pa = project(obj.verts[face.a]);
+        var pb = project(obj.verts[face.b]);
+        var pc = project(obj.verts[face.c]);
+        if (ptInRect(pa.x, pa.y, minx, miny, maxx - minx, maxy - miny) ||
+            ptInRect(pb.x, pb.y, minx, miny, maxx - minx, maxy - miny) ||
+            ptInRect(pc.x, pc.y, minx, miny, maxx - minx, maxy - miny)) {
+          if (!isFaceSel(oi, fi)) sel.faces.push({ oi: oi, fi: fi });
+        }
+      });
+    });
+  } else if (mode === 'object') {
+    objects.forEach(function(obj, oi) {
+      if (!obj.visible) return;
+      var objInBox = false;
+      obj.verts.forEach(function(v) {
+        var p = project(v);
+        if (ptInRect(p.x, p.y, minx, miny, maxx - minx, maxy - miny)) {
+          objInBox = true;
+        }
+      });
+      if (objInBox && !isObjSel(oi)) {
+        selectObj(oi, true);
+      }
+    });
+  }
+  refresh();
+}
+
+function applyPos() {
+  if (!sel.verts.length) return;
+  saveUndo();
+  var x = parseFloat(document.getElementById('posX').value);
+  var y = parseFloat(document.getElementById('posY').value);
+  var z = parseFloat(document.getElementById('posZ').value);
+  getSelVerts().forEach(function(v) { if (!isNaN(x)) v.x = x; if (!isNaN(y)) v.y = y; if (!isNaN(z)) v.z = z; });
+  refresh();
+}
+
+function applyFaceCol() {
+  if (!sel.faces.length) return;
+  saveUndo();
+  var c = document.getElementById('faceCol').value;
+  sel.faces.forEach(function(s) { objects[s.oi].faces[s.fi].color = c; });
+  refresh();
+}
+
+function duplicateSel() {
+  if (sel.objs.length > 0) {
+    sel.objs.forEach(function(oi) { duplicateObj(oi); });
+  } else if (sel.verts.length > 0) {
+    saveUndo();
+    var byObj = {};
+    sel.verts.forEach(function(s) { if (!byObj[s.oi]) byObj[s.oi] = []; byObj[s.oi].push(s.vi); });
+    var nv = [];
+    Object.keys(byObj).forEach(function(oi) {
+      oi = parseInt(oi);
+      var obj = objects[oi], map = {};
+      byObj[oi].forEach(function(vi) {
+        var v = obj.verts[vi];
+        map[vi] = obj.verts.length;
+        obj.verts.push({ x: v.x + 20, y: v.y + 20, z: v.z });
+        nv.push({ oi: oi, vi: map[vi] });
+      });
+      obj.faces.forEach(function(f) {
+        if (map[f.a] !== undefined && map[f.b] !== undefined && map[f.c] !== undefined)
+          obj.faces.push({ a: map[f.a], b: map[f.b], c: map[f.c], color: f.color });
+      });
+    });
+    sel.verts = nv;
+    refresh();
+  }
+}
+
+function deleteSel() {
+  if (sel.objs.length > 0) {
+    saveUndo();
+    sel.objs.sort(function(a, b) { return b - a; }).forEach(function(oi) { objects.splice(oi, 1); });
+    sel = { objs: [], verts: [], faces: [] };
+    refresh(); status('Deleted objects');
+  } else if (sel.faces.length > 0) {
+    saveUndo();
+    var byObj = {};
+    sel.faces.forEach(function(s) { if (!byObj[s.oi]) byObj[s.oi] = []; byObj[s.oi].push(s.fi); });
+    Object.keys(byObj).forEach(function(oi) {
+      oi = parseInt(oi);
+      byObj[oi].sort(function(a, b) { return b - a; }).forEach(function(fi) { objects[oi].faces.splice(fi, 1); });
+    });
+    sel.faces = []; refresh(); status('Deleted faces');
+  } else if (sel.verts.length > 0) {
+    saveUndo();
+    var byObj = {};
+    sel.verts.forEach(function(s) { if (!byObj[s.oi]) byObj[s.oi] = []; byObj[s.oi].push(s.vi); });
+    Object.keys(byObj).forEach(function(oi) {
+      oi = parseInt(oi);
+      var obj = objects[oi];
+      byObj[oi].sort(function(a, b) { return b - a; }).forEach(function(vi) {
+        obj.faces = obj.faces.filter(function(f) { return f.a !== vi && f.b !== vi && f.c !== vi; });
+        obj.faces.forEach(function(f) { if (f.a > vi) f.a--; if (f.b > vi) f.b--; if (f.c > vi) f.c--; });
+        obj.verts.splice(vi, 1);
+      });
+    });
+    sel.verts = []; refresh(); status('Deleted vertices');
+  }
+}
+
+function setTool(t) {
+  tool = t;
+  ['tSel', 'tBox', 'tMov', 'tRot', 'tScl'].forEach(function(id) { document.getElementById(id).classList.remove('on'); });
+  var map = { select: 'tSel', box: 'tBox', move: 'tMov', rotate: 'tRot', scale: 'tScl' };
+  document.getElementById(map[t]).classList.add('on');
+  status('Tool: ' + t);
+}
+
+function setMode(m) {
+  mode = m;
+  sel = { objs: [], verts: [], faces: [] };
+  ['mVert', 'mFace', 'mObj'].forEach(function(id) { document.getElementById(id).classList.remove('on'); });
+  var map = { vertex: 'mVert', face: 'mFace', object: 'mObj' };
+  document.getElementById(map[m]).classList.add('on');
+  document.getElementById('vertProps').style.display = m === 'face' ? 'none' : 'block';
+  document.getElementById('faceProps').style.display = m === 'face' ? 'block' : 'none';
+  refresh();
+}
+
+function toggleSpin() { spin = !spin; document.getElementById('bSpin').classList.toggle('on', spin); document.getElementById('bSpin').innerText = spin ? 'Spin ON' : 'Spin OFF'; }
+function toggleWire() { wire = !wire; document.getElementById('bWire').classList.toggle('on', wire); document.getElementById('bWire').innerText = wire ? 'Wire ON' : 'Wire OFF'; }
+function resetView() { cam = { rx: -0.4, ry: 0.6, zoom: 1.5, px: 0, py: 0 }; }
+function newScene() { if (confirm('Clear scene?')) { saveUndo(); objects = []; sel = { objs: [], verts: [], faces: [] }; refresh(); } }
+
+function showCtx(x, y, items) {
+  var m = document.getElementById('ctxMenu');
+  m.innerHTML = '';
+  items.forEach(function(item) {
+    if (item === '---') { var d = document.createElement('div'); d.className = 'csep'; m.appendChild(d); }
+    else {
+      var d = document.createElement('div');
+      d.className = 'ci';
+      d.innerText = item.label;
+      d.onclick = function(e) { e.stopPropagation(); hideCtx(); item.fn(); };
+      m.appendChild(d);
+    }
+  });
+  m.style.left = Math.min(x, window.innerWidth - 200) + 'px';
+  m.style.top = Math.min(y, window.innerHeight - items.length * 30) + 'px';
+  m.style.display = 'block';
+}
+
+function hideCtx() { document.getElementById('ctxMenu').style.display = 'none'; }
+document.addEventListener('mousedown', function(e) { if (e.target.closest('#ctxMenu') === null) hideCtx(); });
+
+function buildCtx(mx, my, clientX, clientY) {
+  var hit = hitTestFace(mx, my);
+  var items = [];
+
+  if (hit) {
+    var name = objects[hit.oi].name;
+    items.push({ label: 'Select "' + name + '"', fn: function() { selectObj(hit.oi, false); } });
+    items.push({ label: 'Duplicate "' + name + '"', fn: function() { duplicateObj(hit.oi); } });
+    items.push({ label: 'Rename "' + name + '"', fn: function() { renameObj(hit.oi); } });
+    items.push({ label: 'Delete "' + name + '"', fn: function() { deleteObj(hit.oi); } });
+    items.push('---');
+    items.push({ label: 'Toggle Visibility', fn: function() { objects[hit.oi].visible = !objects[hit.oi].visible; refresh(); } });
+    items.push('---');
+  }
+
+  if (sel.verts.length > 0 || sel.faces.length > 0 || sel.objs.length > 0) {
+    items.push({ label: 'Delete Selected', fn: deleteSel });
+    items.push({ label: 'Duplicate Selected', fn: duplicateSel });
+    items.push('---');
+  }
+
+  items.push({ label: 'Add Cube', fn: function() { addPrim('cube'); } });
+  items.push({ label: 'Add Sphere', fn: function() { addPrim('sphere'); } });
+  items.push({ label: 'Add Cylinder', fn: function() { addPrim('cylinder'); } });
+  items.push({ label: 'Add Pyramid', fn: function() { addPrim('pyramid'); } });
+  items.push({ label: 'Add USB Stick', fn: function() { addPrim('usb'); } });
+  items.push('---');
+  items.push({ label: 'Reset View', fn: resetView });
+  items.push({ label: 'Deselect All', fn: deselectAll });
+
+  showCtx(clientX, clientY, items);
+}
+
+function hitTestVert(mx, my) {
+  var best = null, bestD = 14;
+  objects.forEach(function(obj, oi) {
+    if (!obj.visible) return;
+    obj.verts.forEach(function(v, vi) {
+      var p = project(v);
+      var d = Math.sqrt((mx - p.x) * (mx - p.x) + (my - p.y) * (my - p.y));
+      if (d < bestD) { bestD = d; best = { oi: oi, vi: vi }; }
+    });
+  });
+  return best;
+}
+
+function hitTestFace(mx, my) {
+  var allF = [];
+  objects.forEach(function(obj, oi) {
+    if (!obj.visible) return;
+    obj.faces.forEach(function(face, fi) {
+      var ca = transform3D(obj.verts[face.a]);
+      var cb = transform3D(obj.verts[face.b]);
+      var cc = transform3D(obj.verts[face.c]);
+      allF.push({ oi: oi, fi: fi, depth: (ca.z + cb.z + cc.z) / 3,
+        pa: project(obj.verts[face.a]), pb: project(obj.verts[face.b]), pc: project(obj.verts[face.c]) });
+    });
+  });
+  allF.sort(function(a, b) { return a.depth - b.depth; });
+  for (var i = 0; i < allF.length; i++) {
+    if (ptInTri(mx, my, allF[i].pa, allF[i].pb, allF[i].pc)) return allF[i];
+  }
+  return null;
+}
+
+function hitTestGizmo(mx, my) {
+  var center = getSelCenter();
+  if (!center) return null;
+  var pc = project(center);
+  var axes = [
+    { axis: 'x', ep: project({ x: center.x + 50, y: center.y, z: center.z }) },
+    { axis: 'y', ep: project({ x: center.x, y: center.y + 50, z: center.z }) },
+    { axis: 'z', ep: project({ x: center.x, y: center.y, z: center.z + 50 }) }
+  ];
+  for (var i = 0; i < axes.length; i++) {
+    var d = Math.sqrt((mx - axes[i].ep.x) * (mx - axes[i].ep.x) + (my - axes[i].ep.y) * (my - axes[i].ep.y));
+    if (d < 16) return axes[i].axis;
+  }
+  return null;
+}
+
+function drawGizmo() {
+  var center = getSelCenter();
+  if (!center || tool === 'select' || tool === 'box') return;
+
+  var pc = project(center);
+  var axes = [
+    { axis: 'x', color: '#ff4444', ep: project({ x: center.x + 50, y: center.y, z: center.z }) },
+    { axis: 'y', color: '#44ff44', ep: project({ x: center.x, y: center.y + 50, z: center.z }) },
+    { axis: 'z', color: '#4488ff', ep: project({ x: center.x, y: center.y, z: center.z + 50 }) }
+  ];
+
+  axes.forEach(function(a) {
+    ctx.beginPath();
+    ctx.moveTo(pc.x, pc.y);
+    ctx.lineTo(a.ep.x, a.ep.y);
+    ctx.strokeStyle = a.axis === activeAxis ? '#ffffff' : a.color;
+    ctx.lineWidth = a.axis === activeAxis ? 4 : 3;
+    ctx.stroke();
+
+    var angle = Math.atan2(a.ep.y - pc.y, a.ep.x - pc.x);
+    var hl = 12;
+
+    if (tool === 'move') {
+      ctx.beginPath();
+      ctx.moveTo(a.ep.x, a.ep.y);
+      ctx.lineTo(a.ep.x - hl * Math.cos(angle - 0.4), a.ep.y - hl * Math.sin(angle - 0.4));
+      ctx.lineTo(a.ep.x - hl * Math.cos(angle + 0.4), a.ep.y - hl * Math.sin(angle + 0.4));
+      ctx.closePath();
+      ctx.fillStyle = a.axis === activeAxis ? '#fff' : a.color;
+      ctx.fill();
+    } else if (tool === 'scale') {
+      ctx.fillStyle = a.axis === activeAxis ? '#fff' : a.color;
+      ctx.fillRect(a.ep.x - 5, a.ep.y - 5, 10, 10);
+    } else if (tool === 'rotate') {
+      ctx.beginPath();
+      ctx.arc(a.ep.x, a.ep.y, 6, 0, Math.PI * 2);
+      ctx.strokeStyle = a.axis === activeAxis ? '#fff' : a.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = a.color;
+    ctx.font = 'bold 11px Tahoma';
+    ctx.fillText(a.axis.toUpperCase(), a.ep.x + 8, a.ep.y - 8);
+  });
+
+  ctx.beginPath();
+  ctx.arc(pc.x, pc.y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+}
+
+function axisScreenDir(center, axis) {
+  var offset = { x: center.x, y: center.y, z: center.z };
+  offset[axis] += 1;
+  var pc = project(center), po = project(offset);
+  var dx = po.x - pc.x, dy = po.y - pc.y;
+  var len = Math.sqrt(dx * dx + dy * dy) || 1;
+  return { x: dx / len, y: dy / len };
+}
+
+function applyDrag(dx, dy) {
+  var center = getSelCenter();
+  if (!center || !activeAxis) return;
+  var verts = getSelVerts();
+  var dir = axisScreenDir(center, activeAxis);
+  var amount = dx * dir.x + dy * dir.y;
+
+  if (tool === 'move') {
+    var speed = 0.6;
+    verts.forEach(function(v) { v[activeAxis] += amount * speed; });
+  } else if (tool === 'scale') {
+    var factor = 1 + amount * 0.008;
+    verts.forEach(function(v) { v[activeAxis] = center[activeAxis] + (v[activeAxis] - center[activeAxis]) * factor; });
+  } else if (tool === 'rotate') {
+    var angle = amount * 0.015;
+    verts.forEach(function(v) {
+      var cos = Math.cos(angle), sin = Math.sin(angle);
+      if (activeAxis === 'y') {
+        var x = v.x - center.x, z = v.z - center.z;
+        v.x = center.x + x * cos - z * sin; v.z = center.z + x * sin + z * cos;
+      } else if (activeAxis === 'x') {
+        var y = v.y - center.y, z = v.z - center.z;
+        v.y = center.y + y * cos - z * sin; v.z = center.z + y * sin + z * cos;
+      } else {
+        var x = v.x - center.x, y = v.y - center.y;
+        v.x = center.x + x * cos - y * sin; v.y = center.y + x * sin + y * cos;
+      }
+    });
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  var g = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, 600);
+  g.addColorStop(0, '#2a2a2a'); g.addColorStop(1, '#161616');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 0.5;
+  for (var i = -5; i <= 5; i++) {
+    var a = project({ x: i * 40, y: 0, z: -200 }), b = project({ x: i * 40, y: 0, z: 200 });
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    a = project({ x: -200, y: 0, z: i * 40 }); b = project({ x: 200, y: 0, z: i * 40 });
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+
+  var allF = [];
+  objects.forEach(function(obj, oi) {
+    if (!obj.visible) return;
+    obj.faces.forEach(function(face, fi) {
+      var va = obj.verts[face.a], vb = obj.verts[face.b], vc = obj.verts[face.c];
+      var ca = transform3D(va), cb = transform3D(vb), cc = transform3D(vc);
+      var n = normalize(triNormal(ca, cb, cc));
+      var light = normalize({ x: 0.3, y: -0.5, z: 1 });
+      var dot = n.x * light.x + n.y * light.y + n.z * light.z;
+      var bright = Math.max(0.3, Math.min(1.1, 0.45 + dot * 0.65));
+
+      allF.push({
+        oi: oi, fi: fi,
+        pa: project(va), pb: project(vb), pc: project(vc),
+        depth: (ca.z + cb.z + cc.z) / 3,
+        color: face.color, bright: bright,
+        fSel: isFaceSel(oi, fi), oSel: isObjSel(oi)
+      });
+    });
+  });
+
+  allF.sort(function(a, b) { return b.depth - a.depth; });
+
+  allF.forEach(function(f) {
+    ctx.beginPath();
+    ctx.moveTo(f.pa.x, f.pa.y);
+    ctx.lineTo(f.pb.x, f.pb.y);
+    ctx.lineTo(f.pc.x, f.pc.y);
+    ctx.closePath();
+
+    if (wire) {
+      ctx.strokeStyle = f.fSel ? '#fff' : '#4a90e2';
+      ctx.lineWidth = f.fSel ? 2 : 1;
+      ctx.stroke();
+    } else {
+      ctx.globalAlpha = mode === 'vertex' ? 0.75 : 1;
+      ctx.fillStyle = shade(f.color, f.bright);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (f.fSel) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; }
+      else if (f.oSel && mode === 'object') { ctx.strokeStyle = '#ff8800'; ctx.lineWidth = 1.5; }
+      else { ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1; }
+      ctx.stroke();
+    }
+  });
+
+  if (mode === 'vertex') {
+    objects.forEach(function(obj, oi) {
+      if (!obj.visible) return;
+      obj.verts.forEach(function(v, vi) {
+        var p = project(v);
+        var s = isVertSel(oi, vi);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, s ? 5 : 3, 0, Math.PI * 2);
+        ctx.fillStyle = s ? '#fff' : '#ff6600';
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+    });
+  }
+
+  drawGizmo();
+}
+
+function loop() {
+  if (spin) cam.ry += 0.004;
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function refresh() {
+  var ol = document.getElementById('objList');
+  ol.innerHTML = '';
+  objects.forEach(function(o, i) {
+    var d = document.createElement('div');
+    d.className = 'li' + (isObjSel(i) ? ' sel' : '');
+    d.innerHTML = (o.visible ? '[V] ' : '[X] ') + o.name;
+    d.onclick = function(e) { selectObj(i, e.ctrlKey || e.metaKey); };
+    d.oncontextmenu = function(e) {
+      e.preventDefault(); e.stopPropagation();
+      showCtx(e.clientX, e.clientY, [
+        { label: 'Select "' + o.name + '"', fn: function() { selectObj(i, false); } },
+        { label: 'Duplicate', fn: function() { duplicateObj(i); } },
+        { label: 'Rename', fn: function() { renameObj(i); } },
+        { label: 'Toggle Visibility', fn: function() { o.visible = !o.visible; refresh(); } },
+        '---',
+        { label: 'Delete', fn: function() { deleteObj(i); } }
+      ]);
+    };
+    ol.appendChild(d);
+  });
+
+  var vl = document.getElementById('vertList');
+  vl.innerHTML = '';
+  objects.forEach(function(o, oi) {
+    o.verts.forEach(function(v, vi) {
+      var d = document.createElement('div');
+      d.className = 'li' + (isVertSel(oi, vi) ? ' sel' : '');
+      d.innerText = o.name + '.V' + vi + ' (' + Math.round(v.x) + ',' + Math.round(v.y) + ',' + Math.round(v.z) + ')';
+      d.onclick = function(e) { selectVert(oi, vi, e.ctrlKey || e.metaKey); };
+      vl.appendChild(d);
+    });
+  });
+
+  var fl = document.getElementById('faceList');
+  fl.innerHTML = '';
+  objects.forEach(function(o, oi) {
+    o.faces.forEach(function(f, fi) {
+      var d = document.createElement('div');
+      d.className = 'li' + (isFaceSel(oi, fi) ? ' sel' : '');
+      d.innerHTML = '<span class="sw" style="background:' + f.color + '"></span>' + o.name + '.F' + fi + ' [' + f.a + ',' + f.b + ',' + f.c + ']';
+      d.onclick = function(e) { selectFace(oi, fi, e.ctrlKey || e.metaKey); };
+      fl.appendChild(d);
+    });
+  });
+
+  var vc = 0, fc = 0;
+  objects.forEach(function(o) { vc += o.verts.length; fc += o.faces.length; });
+  document.getElementById('sR').innerText = 'Objects: ' + objects.length + ' | Verts: ' + vc + ' | Faces: ' + fc;
+
+  var data = [];
+  objects.forEach(function(o) { data.push({ name: o.name, verts: o.verts, faces: o.faces }); });
+  document.getElementById('jsonOut').value = JSON.stringify(data, null, 2);
+}
+
+function status(msg) { document.getElementById('sL').innerText = msg; }
+
+var mouseDown = false, rightDown = false, moved = false, transforming = false, activeAxis = null;
+var lastX = 0, lastY = 0, startX = 0, startY = 0;
+
+canvas.addEventListener('mousedown', function(e) {
+  if (e.button === 2) { rightDown = true; moved = false; startX = e.clientX; startY = e.clientY; return; }
+  mouseDown = true; moved = false;
+  lastX = e.clientX; lastY = e.clientY; startX = e.clientX; startY = e.clientY;
+
+  var rect = canvas.getBoundingClientRect();
+  var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+  if (tool === 'box') {
+    boxStart = { x: e.clientX, y: e.clientY };
+    selectBox.style.left = e.clientX + 'px';
+    selectBox.style.top = e.clientY + 'px';
+    selectBox.style.width = '0px';
+    selectBox.style.height = '0px';
+    selectBox.style.display = 'block';
+    return;
+  }
+
+  if (tool !== 'select' && sel.verts.length > 0) {
+    var ax = hitTestGizmo(mx, my);
+    if (ax) { transforming = true; activeAxis = ax; saveUndo(); return; }
+  }
+});
+
+canvas.addEventListener('mousemove', function(e) {
+  var dx = e.clientX - lastX, dy = e.clientY - lastY;
+
+  if (tool === 'box' && boxStart) {
+    var x = Math.min(boxStart.x, e.clientX);
+    var y = Math.min(boxStart.y, e.clientY);
+    var w = Math.abs(e.clientX - boxStart.x);
+    var h = Math.abs(e.clientY - boxStart.y);
+    selectBox.style.left = x + 'px';
+    selectBox.style.top = y + 'px';
+    selectBox.style.width = w + 'px';
+    selectBox.style.height = h + 'px';
+    if (Math.abs(e.clientX - startX) > 2 || Math.abs(e.clientY - startY) > 2) moved = true;
+    lastX = e.clientX; lastY = e.clientY;
+    return; // Don't rotate camera during box drag
+  }
+
+  if (mouseDown) {
+    if (Math.abs(e.clientX - startX) > 2 || Math.abs(e.clientY - startY) > 2) moved = true;
+
+    if (transforming) {
+      applyDrag(dx, dy);
+    } else if (e.shiftKey) {
+      cam.px += dx; cam.py += dy;
+    } else {
+      cam.ry += dx * 0.008; cam.rx += dy * 0.008;
+    }
+  }
+
+  if (rightDown) {
+    if (Math.abs(e.clientX - startX) > 3 || Math.abs(e.clientY - startY) > 3) { moved = true; cam.px += dx; cam.py += dy; }
+  }
+
+  lastX = e.clientX; lastY = e.clientY;
+});
+
+canvas.addEventListener('mouseup', function(e) {
+  if (tool === 'box' && boxStart && !moved) {
+    boxStart = null;
+    selectBox.style.display = 'none';
+    mouseDown = false;
+    return;
+  }
+
+  if (tool === 'box' && boxStart) {
+    var rect = canvas.getBoundingClientRect();
+    boxSelect(boxStart.x - rect.left, boxStart.y - rect.top, e.clientX - rect.left, e.clientY - rect.top);
+    boxStart = null;
+    selectBox.style.display = 'none';
+  }
+
+  if (e.button === 0 && !moved && !transforming && tool !== 'box') {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+    if (mode === 'vertex') {
+      var hit = hitTestVert(mx, my);
+      if (hit) selectVert(hit.oi, hit.vi, e.ctrlKey || e.metaKey);
+      else if (!e.ctrlKey) deselectAll();
+    } else if (mode === 'face') {
+      var hit = hitTestFace(mx, my);
+      if (hit) {
+        if (e.ctrlKey || e.metaKey) {
+          selectFace(hit.oi, hit.fi, true);
+        } else {
+          selectObj(hit.oi, false);
+        }
+      }
+      else if (!e.ctrlKey) deselectAll();
+    } else if (mode === 'object') {
+      var hit = hitTestFace(mx, my);
+      if (hit) selectObj(hit.oi, e.ctrlKey || e.metaKey);
+      else if (!e.ctrlKey) deselectAll();
+    }
+  }
+
+  mouseDown = false; 
+  if (transforming) {
+    refresh();
+  }
+  transforming = false; activeAxis = null;
+});
+
+canvas.addEventListener('mouseup', function(e) {
+  if (e.button === 2 && !moved) {
+    var rect = canvas.getBoundingClientRect();
+    buildCtx(e.clientX - rect.left, e.clientY - rect.top, e.clientX, e.clientY);
+  }
+  rightDown = false;
+});
+
+canvas.addEventListener('wheel', function(e) {
+  e.preventDefault();
+  cam.zoom *= e.deltaY > 0 ? 0.92 : 1.08;
+  cam.zoom = Math.max(0.1, Math.min(6, cam.zoom));
+}, { passive: false });
+
+canvas.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+
+document.addEventListener('keydown', function(e) {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'z') { e.preventDefault(); undo(); }
+    if (e.key === 'n') { e.preventDefault(); newScene(); }
+    if (e.key === 'e') { e.preventDefault(); exportHTML(); }
+    return;
+  }
+  if (e.key === 'a') { e.preventDefault(); selectAll(); }
+  if (e.key === 'Delete' || e.key === 'x') { e.preventDefault(); deleteSel(); }
+  if (e.key === 'g') setTool('move');
+  if (e.key === 'r') setTool('rotate');
+  if (e.key === 's') setTool('scale');
+  if (e.key === 'z') toggleWire();
+  if (e.key === 'D') { e.preventDefault(); duplicateSel(); }
+  if (e.key === '1') setMode('vertex');
+  if (e.key === '2') setMode('face');
+  if (e.key === '3') setMode('object');
+  if (e.key === 'b') setTool('box');
+});
+
+function exportHTML() {
+  var allV = [], allF = [], offset = 0;
+  objects.forEach(function(obj) {
+    if (!obj.visible) return;
+    obj.verts.forEach(function(v) { allV.push({ x: v.x, y: v.y, z: v.z }); });
+    obj.faces.forEach(function(f) { allF.push({ a: f.a + offset, b: f.b + offset, c: f.c + offset, color: f.color }); });
+    offset += obj.verts.length;
+  });
+  var modelData = JSON.stringify({vertices:allV,faces:allF});
+
+  var html = '<!DOCTYPE html>\n<html>\n<head>\n<style>\nbody{margin:0;height:100vh;background:#111;display:flex;align-items:center;justify-content:center;}\ncanvas{width:100vw;height:100vh;}\n</style>\n</head>\n<body>\n<canvas id="c"></canvas>\n<script>\nconst m = '+modelData+';\nconst canvas=document.getElementById("c");\nconst ctx=canvas.getContext("2d");\nfunction resize(){\n  canvas.width=window.innerWidth;\n  canvas.height=window.innerHeight;\n}\nwindow.onresize=resize;\nresize();\nlet r=0;\nfunction loop(){\n  r+=0.01;\n  ctx.clearRect(0,0,canvas.width,canvas.height);\n  m.faces.map(f=>{\n    function p(v){\n      let x1=v.x*Math.cos(r)-v.z*Math.sin(r);\n      let z1=v.z*Math.cos(r)+v.x*Math.sin(r);\n      let y1=v.y*Math.cos(1.0)-z1*Math.sin(1.0); /* Fixed Angle Facing Downwards */\n      let s=400/(400+z1)*2.5;\n      return {x:x1*s+canvas.width/2,y:y1*s+canvas.height/2,z:z1}\n    }\n    let a=p(m.vertices[f.a]),b=p(m.vertices[f.b]),c=p(m.vertices[f.c]);\n    return {a:a,b:b,c:c,d:(a.z+b.z+c.z)/3,color:f.color}\n  }).sort((a,b)=>b.d-a.d).forEach(f=>{\n    ctx.beginPath();\n    ctx.moveTo(f.a.x,f.a.y);\n    ctx.lineTo(f.b.x,f.b.y);\n    ctx.lineTo(f.c.x,f.c.y);\n    ctx.closePath();\n    ctx.fillStyle=f.color;\n    ctx.fill();\n    ctx.strokeStyle="rgba(0,0,0,0.1)";\n    ctx.stroke();\n  });\n  requestAnimationFrame(loop);\n}\nloop();\n<\/script>\n</body>\n</html>';
+
+  var blob = new Blob([html], { type: 'text/html' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = '3d-model.html'; a.click();
+  URL.revokeObjectURL(url);
+  status('Exported HTML');
+}
+
+function importJSON() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = function(e) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var data = JSON.parse(ev.target.result);
+        saveUndo();
+        if (Array.isArray(data)) {
+          data.forEach(function(o) { objects.push({ name: o.name || 'Import', verts: o.verts, faces: o.faces, visible: true }); });
+        }
+        refresh(); status('Imported');
+      } catch (e) { alert('Invalid JSON'); }
+    };
+    reader.readAsText(e.target.files[0]);
+  };
+  inp.click();
+}
+
+function copyJSON() {
+  var t = document.getElementById('jsonOut');
+  t.select(); document.execCommand('copy'); status('Copied');
+}
+
+addPrim('cube');
+status('Welcome to WebCAD 3D Studio');
+loop();
+</script>
+</body>
+</html>
